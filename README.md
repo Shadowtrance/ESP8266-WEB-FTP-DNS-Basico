@@ -13,6 +13,8 @@ It Is Necessary To Have Installed In The Arduino IDE The Repository
 http://arduino.esp8266.com/stable/package_esp8266com_index.json 
 And The card esp8266 by ESP8266 Community Version 2.4.1 (Minimally)
 
+You also need to have the ArduinoJson library installed (version 5.13.2 seems to work) - Click "Sketch" menu > "Include Library" > "Manage Libraries" > Search json and select ArduinoJson and version 5.13.2 from the select version drop down list and click install.
+
 The Default WIFI Configuration is:
 WIFISSID = ESP8266
 WIFIPass = 12345678
