@@ -1,8 +1,8 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
 #include <FS.h>
-#include "./DNSServer.h"
-#include "./ESP8266FtpServer.h"
+#include "DNSServer.h"
+#include "ESP8266FtpServer.h"
 #include <ArduinoJson.h>
 
 //DNS configuration port
