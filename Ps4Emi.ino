@@ -5,13 +5,13 @@
 #include "./ESP8266FtpServer.h"
 #include <ArduinoJson.h>
 
-//Configuracion Puerto DNS
-const byte PuertoDNS = 53;
-//Configuracion Puerto HTTP
-const byte PuertoHTTP = 80;
+//DNS configuration port
+const byte DNSPort = 53;
+//HTTP configuration port
+const byte HTTPPort = 80;
 
-//Estructura Archivo De Configuracion
-struct ArchivoConfiguracion {
+//Configuration file structure
+struct FileConfiguration {
   char *FTPUser = "Admin";
   char *FTPPass = "Upload";
   char *WIFISSID = "ESP8266";
@@ -20,64 +20,64 @@ struct ArchivoConfiguracion {
   IPAddress Subnet = IPAddress(255,255,255,0);
 };
 
-//Defino El Archivo De Configuracion
-ArchivoConfiguracion Configuracion;
-//Defino El Archivo Para Subir
-File ArchivoASubir;
+//Configuration file
+FileConfiguration Configuration;
+//File to upload
+File fileUpload;
 
-//Creo Los Servidores
-ESP8266WebServer WebServer(PuertoHTTP);
+//Servers
+ESP8266WebServer WebServer(HTTPPort);
 DNSServer DNS;
 FtpServer FTP;
 
-//Funcion Para Cargar La Configuracion Desde Un JSON
-void LeerConfiguracion() {
-  //Abro El Archivo Configuracion.json
-  File ArchivoConfig = SPIFFS.open("/Configuracion.json", "r");
-  //Creo Un Buffer Dinamico Para El JSON
+//Function to load the configuration from JSON
+void ReadConfiguration() {
+  //Open the configuration.json file
+  File FileConfig = SPIFFS.open("/Configuration.json", "r");
+  //Create a dynamic buffer for the JSON
   DynamicJsonBuffer jsonBuffer;
 
-  //Parseo El Archivo A UN JSON
-  JsonObject &JSON = jsonBuffer.parseObject(ArchivoConfig);
-  //Si No Pude Leer El JSON
+  //Parse the file to JSON
+  JsonObject &JSON = jsonBuffer.parseObject(FileConfig);
+  //Could not read the JSON
   if (!JSON.success()) {
-    Serial.println(F("Fallo La Lectura De Archivo Config"));
+    Serial.println(F("Read Config File Failed"));
   } else {
-    //Copiar Valores 
-    Configuracion.FTPUser = (char*)JSON["FTPUser"].as<char*>();
-    Configuracion.FTPPass = (char*)JSON["FTPPass"].as<char*>();
-    Configuracion.WIFISSID = (char*)JSON["WIFISSID"].as<char*>();
-    Configuracion.WIFIPass = (char*)JSON["WIFIPass"].as<char*>();
-    Configuracion.IP.fromString(JSON["IP"].as<String>());
-    Configuracion.Subnet.fromString(JSON["Subnet"].as<String>());
-    //Cierro El Archivo
-    ArchivoConfig.close();
+    //Copy Values
+    Configuration.FTPUser = (char*)JSON["FTPUser"].as<char*>();
+    Configuration.FTPPass = (char*)JSON["FTPPass"].as<char*>();
+    Configuration.WIFISSID = (char*)JSON["WIFISSID"].as<char*>();
+    Configuration.WIFIPass = (char*)JSON["WIFIPass"].as<char*>();
+    Configuration.IP.fromString(JSON["IP"].as<String>());
+    Configuration.Subnet.fromString(JSON["Subnet"].as<String>());
+    //Close the file
+    FileConfig.close();
   }
 }
 
-//Funcion Para Grabar La Configuracion
-void GrabarConfiguracion() {
-  //Abro El Archivo Configuracion.json
-  File ArchivoConfig = SPIFFS.open("/Configuracion.json", "w");
-  //Creo Un Buffer Dinamico Para El JSON
+//Function to write the configuration
+void WriteConfiguration() {
+  //Open the configuration.json file
+  File FileConfig = SPIFFS.open("/Configuration.json", "w");
+  //Create a dynamic buffer for the JSON
   DynamicJsonBuffer jsonBuffer;
-  //Creo El Objeto JSON
+  //Create the JSON object
   JsonObject &JSON = jsonBuffer.createObject();
-  //Creo El Raiz Del JSON
-  JSON["FTPUser"] = Configuracion.FTPUser;
-  JSON["FTPPass"] = Configuracion.FTPPass;
-  JSON["WIFISSID"] = Configuracion.WIFISSID;
-  JSON["WIFIPass"] = Configuracion.WIFIPass;
-  JSON["IP"] = IpAddress2String(Configuracion.IP);
-  JSON["Subnet"] = IpAddress2String(Configuracion.Subnet);
-  //Escribo El Contenido De La Configuracion Y Devuelvo Un Error Si Algo Fallo
-  if (JSON.printTo(ArchivoConfig) == 0) { Serial.println(F("Error Al Grabar La Configuracion")); }
-  //Cierro El Archivo
-  ArchivoConfig.close();
+  //Create the JSON root
+  JSON["FTPUser"] = Configuration.FTPUser;
+  JSON["FTPPass"] = Configuration.FTPPass;
+  JSON["WIFISSID"] = Configuration.WIFISSID;
+  JSON["WIFIPass"] = Configuration.WIFIPass;
+  JSON["IP"] = IpAddress2String(Configuration.IP);
+  JSON["Subnet"] = IpAddress2String(Configuration.Subnet);
+  //Write the content of the configuration and return an error if something failed
+  if (JSON.printTo(FileConfig) == 0) { Serial.println(F("Error when writing the configuration")); }
+  //Close the file
+  FileConfig.close();
 }
 
 
-//Funcion Para Convertir Un IPAdress En Un String
+//Function to convert an IPAdress to a string
 String IpAddress2String(const IPAddress& ipAddress) {
   return String(ipAddress[0]) + String(".") +\
   String(ipAddress[1]) + String(".") +\
@@ -86,75 +86,75 @@ String IpAddress2String(const IPAddress& ipAddress) {
 }
 
 
-//Funcion Para Convertir Un String En Un char*
+//Function to convert a string into a char*
 char* String2Char(String Texto) {
-  //Si El Texto Tiene Mas De 0 Caracteres Los Devuelvo Como String
+  //If the text has more than 0 characters i return as string
   if (Texto.length()!=0) { return const_cast<char*>(Texto.c_str()); }
-  //Sino Devuelvo Un String Vacio
+  //Else return an empty string
   else return "";
 }
 
-//Funcion Para Configurar El WIFI y El FTP
-void ConfigurarWIFIyFTP() {
-  //Seteo El Modo AP
+//Function to configure WIFI and FTP
+void ConfigureWIFIFTP() {
+  //Set to AP Mode
   WiFi.mode(WIFI_AP);
-  //Configuro La IP, Puerta De Enlace Y Mascara De Red
-  WiFi.softAPConfig(Configuracion.IP, Configuracion.IP, Configuracion.Subnet);
-  //Si El Password No Esta Vacio - El 10 Es El Canal, Y El False Es Para Que No Sea Invisible
-  if (sizeof(Configuracion.WIFIPass)-1 != 0) { WiFi.softAP(Configuracion.WIFISSID, Configuracion.WIFIPass, 10, false); } 
-  //Si El Password Esta Vacio
-  else { WiFi.softAP(Configuracion.WIFISSID); }
-  //Inicio El Servidor FTP
-  FTP.begin(Configuracion.FTPUser, Configuracion.FTPPass);
+  //Configure IP, Gateway and Network Mask
+  WiFi.softAPConfig(Configuration.IP, Configuration.IP, Configuration.Subnet);
+  //If the password is not empty - The 10 is the Channel, And The False is so that it is not invisible
+  if (sizeof(Configuration.WIFIPass)-1 != 0) { WiFi.softAP(Configuration.WIFISSID, Configuration.WIFIPass, 10, false); } 
+  //If the password is empty
+  else { WiFi.softAP(Configuration.WIFISSID); }
+  //Start the FTP server
+  FTP.begin(Configuration.FTPUser, Configuration.FTPPass);
 }
 
 
 void setup() {
   Serial.begin(115200);
-  //Inicio El FileSystem Donde Subo Los Html
+  //The root filesystem where i upload the html
   SPIFFS.begin();
 
-  //Leer Configuracion
-  LeerConfiguracion();
+  //Read configuration
+  ReadConfiguration();
     
-  //Configuracion WIFI Y FTP
-  ConfigurarWIFIyFTP();
+  //WIFI and FTP configuration
+  ConfigureWIFIFTP();
 
-  //Configuracion DNS
+  //DNS configuration
   DNS.setTTL(300);
   DNS.setErrorReplyCode(DNSReplyCode::ServerFailure);
-  DNS.start(PuertoDNS, "*", Configuracion.IP);
+  DNS.start(DNSPort, "*", Configuration.IP);
 
-  //Web Para Subir Los Archivos - Actualizar
+  //Web to upload the files - update
   WebServer.on("/upload", HTTP_GET, []() {
-    //Si Se Encontro El Archivo Se Envia Y Devuelve Un True
-    if (!ManejarArchivo("/upload.html"))
-      //Si No Se Encuentra El Archivo, Se Envia Un 404 Y Devuelve Un False
-      WebServer.send(404, "text/plain", "Que Haces Loro?...");
+    //If found the file sent and returns a true
+    if (!ManageFile("/upload.html"))
+      //If the file is not found, a 404 is sent and a false is returned
+      WebServer.send(404, "text/plain", "File not found...");
   });
 
-  //Web Para Recibir Los Archivos - Actualizar (POST)
+  //Web to receive files - update (POST)
   WebServer.on("/upload", HTTP_POST,
-            //Enviar Status 200 (OK), Para Decirle Al Cliente Que Estamos Listos Para Recivir
+            //Send status 200 (OK), To tell the client that we are ready to receive
             []() { WebServer.send(200);},
-            //Recibo El Archivo
-            subirArchivo
+            //Receive the file
+            uploadFile
   );
            
-  //Siempre Busco El Archivo
+  //I always look for the file
   WebServer.onNotFound([]() {
-    //Si Se Encontro El Archivo Se Envia Y Devuelve Un True
-    if (!ManejarArchivo(WebServer.uri()))
-      //Si No Se Encuentra El Archivo, Se Envia Un 404 Y Devuelve Un False
-      WebServer.send(404, "text/plain", "Que Haces Loro?...");
+    //If found the file sent and returns true
+    if (!ManageFile(WebServer.uri()))
+      //If the file is not found, a 404 is sent and false is returned
+      WebServer.send(404, "text/plain", "File not found...");
   });
 
-  //Inicio El Server WEB
+  //Start the WEB server
   WebServer.begin();
 }
 
-//Obtengo El MIME Type Segun La Extension
-String obtenerTipo(String filename) {
+//I get the MIME type according to the extension
+String getMimeType(String filename) {
   if(filename.endsWith(".htm")) return "text/html";
   else if(filename.endsWith(".html")) return "text/html";
   else if(filename.endsWith(".css")) return "text/css";
@@ -166,69 +166,69 @@ String obtenerTipo(String filename) {
   else if(filename.endsWith(".xml")) return "text/xml";
   else if(filename.endsWith(".pdf")) return "application/x-pdf";
   else if(filename.endsWith(".zip")) return "application/x-zip";
-  //Creo La Extension Comprimida Para Menor Trafico De Red
+  //Create the compressed extension for less network traffic
   else if(filename.endsWith(".gz")) return "application/x-gzip";
   return "text/plain";
 }
 
-//Envio El Archivo Solicitado Si Existe
-bool ManejarArchivo(String path) {
-  //Si Me Piden Un Carpeta Los Llevo Al Archivo index De Esa Carpeta
+//Send the requested file if there is
+bool ManageFile(String path) {
+  //If they ask me for a folder I take them to the index file of that folder
   if (path.endsWith("/")) path += "index.html";
-  //Obtener el MIME Type
-  String mimeType = obtenerTipo(path);
-  //Archivo Comprimido GZ
-  String pathComprimido = path + ".gz";
-  //Si El Archivo Existe
-  if (SPIFFS.exists(pathComprimido) || SPIFFS.exists(path)) {
-    //Si Existe Comprimido Le Envio El Comprimido
-    if(SPIFFS.exists(pathComprimido)) path += ".gz";
-    //Abro El Archivo En Modo Lectura ;)
+  //Get the MIME Type
+  String mimeType = getMimeType(path);
+  //GZ compressed file
+  String pathCompressed = path + ".gz";
+  //If the file exists
+  if (SPIFFS.exists(pathCompressed) || SPIFFS.exists(path)) {
+    //If compressed send compressed
+    if(SPIFFS.exists(pathCompressed)) path += ".gz";
+    //Open the file in read mode ;)
     File file = SPIFFS.open(path, "r");
-    //Se Lo Envio Al Cliente
+    //I send it to the client
     size_t sent = WebServer.streamFile(file, mimeType);
-    //Cierro El Archivo
+    //Close the file
     file.close();
     return true;
   }
-  //Si El Archivo No Existe Devuelvo Falso
+  //If the file does not exist return false
   return false;
 }
 
-//Subir Un Nuevo Archivo a SPIFFS
-void subirArchivo() {
+//Upload a new file to SPIFFS
+void uploadFile() {
   HTTPUpload& upload = WebServer.upload();
   if (upload.status == UPLOAD_FILE_START) {
     String filename = upload.filename;
     if (!filename.startsWith("/")) filename = "/" + filename;
-    //Abrir El Archivo Para Escribir En SPIFFS (Lo Creo Si No Existe)
-    ArchivoASubir = SPIFFS.open(filename, "w");
+    //Open the file to write in SPIFFS (i believe it if it does not exist)
+    fileUpload = SPIFFS.open(filename, "w");
     filename = String();
   } else if (upload.status == UPLOAD_FILE_WRITE) {
-    if (ArchivoASubir)
-      //Escribo Los Bytes Recibido Al Archvio
-      ArchivoASubir.write(upload.buf, upload.currentSize);
+    if (fileUpload)
+      //Write the bytes received to the file
+      fileUpload.write(upload.buf, upload.currentSize);
   } else if (upload.status == UPLOAD_FILE_END) {
-    //Si El Archivo Se Subio Correctamente
-    if (ArchivoASubir) {
-      //Cierro El Archivo
-      ArchivoASubir.close();
-      //Redirecciono El Cliente A La Pagina De Exito
-      WebServer.sendHeader("Location", "/correcto.html");
+    //If the file was up correctly
+    if (fileUpload) {
+      //Close the file
+      fileUpload.close();
+      //Redirect the client to the success page
+      WebServer.sendHeader("Location", "/correct.html");
       WebServer.send(303);
     } else {
-      //Sino Muestro Un Error
-      WebServer.send(500, "text/plain", "No Pude Subir El Archivo Loro.");
+      //Else show an error
+      WebServer.send(500, "text/plain", "Could not upload the file.");
     }
   }
 }
 
 void loop() {
-  //Espero Los Request
+  //Await the request
   WebServer.handleClient();
-  //Proceso Los Request DNS
+  //Process the DNS request
   DNS.processNextRequest();
-  //Manejo Las Peticiones FTP
+  //Handle FTP requests
   FTP.handleFTP();
 }
 

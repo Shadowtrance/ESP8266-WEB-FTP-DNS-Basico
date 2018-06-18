@@ -1,46 +1,44 @@
-# ESP8266-WEB-FTP-DNS-Basico
-A Basic Firm To Host Your Customizable PS4 Exploit - Open Source ( No Include Exploits )
+# ESP8266-WEB-FTP-DNS-Basic
+A Basic Firm To Host Your Customizable PS4 Exploit - Open Source ( No Exploits Included )
 
-Incluye Los Fuentes De DNSServer 
-- Los Pueden Volver A Descargar Desde El Siguiente LINK
+Includes DNSServer Sources 
+- They Can Downloaded from the following link
 https://github.com/esp8266/Arduino/tree/master/libraries/DNSServer/src
 
-Incluye Los Fuentes de ESP8266FtpServer  
-- Los Pueden Volver A Descargar Desde El Siguiente LINK
+Includes The Sources of ESP8266FtpServer  
+- They Can Downloaded from the following link
 https://github.com/nailbuster/esp8266FTPServer
 
-Es Necesario Tener Instalado En El IDE Arduino El Repositorio
+It Is Necessary To Have Installed In The Arduino IDE The Repository
 http://arduino.esp8266.com/stable/package_esp8266com_index.json 
-Y La Tarjeta esp8266 by ESP8266 Community Version 2.4.1 (Minimamente)
+And The card esp8266 by ESP8266 Community Version 2.4.1 (Minimally)
 
-La Configuracion WIFI Por Defecto Es:
+The Default WIFI Configuration is:
 WIFISSID = ESP8266
 WIFIPass = 12345678
 
-La Configuracion FTP Por Defecto Es:
+The Default FTP Configuration is:
 FTPUser = Admin
 FTPPass = Upload
 
-La Configuracion IP Por Defecto Es:
+The Default IP Configuration is:
 IP = 13.13.13.13
 Subnet = 255.255.255.0
 
-La Configuracion DNS:
-Resuelve Todas Las Peticiones A La IP Configurada Del ESP8266.
-(Ej: www.google.com - 13.13.13.13 , www.playstation.com - 13.13.13.13)
+The DNS Configuration:
+Resolves All Requests To The Configured IP Of ESP8266.
+(Eg: www.google.com - 13.13.13.13 , www.playstation.com - 13.13.13.13)
 
-Los Archivos De La Carpeta data, Se Pueden Subir Por FTP Con La Configuracion Anterior. 
-Es Necesario Conectarse Por FTP Sin Cifrado (Only Use Plain FTP (Insecure) En El FileZilla Por Ej.)
+The files of the folder data, can be uploaded by FTP with the previous configuration. 
+It is necessary to connect by FTP Without Encryption (Only Use Plain FTP (Insecure) in the FileZilla for example)
 
-O Flashear Por Medio Del IDE de Arduino
-Desde Herramientas -> ESP8266 Sketch Data Upload (Esto Borrara Todos Los Archivos Que Se Encuentren En EL SPIFFS). 
-Para Activar La Opcion Esta Seguir Este Tutorial: http://esp8266.github.io/Arduino/versions/2.0.0/doc/filesystem.html#uploading-files-to-file-system
+Or Flashing Through Arduino IDE
+From Tools -> ESP8266 Sketch Data Upload (This will delete all files that are found in the SPIFFS). 
+To Activate The Option This Follow This Tutorial: http://esp8266.github.io/Arduino/versions/2.0.0/doc/filesystem.html#uploading-files-to-file-system
 
-Una Vez Subidos Los Archivos upload.html Y correcto.html, Los Proximos Archivos Se Pueden Subir Directamente Desde: Http://13.13.13.13/upload
+Once Uploaded The files upload.html And correct.html, The next files can be uploaded directly from: Http://13.13.13.13/upload
 
+This Sketch Can Be Flashed, On A Previous Bin For Example (# ESP8266XploitHost 2.7) To Keep The Exploit Files.
+For This In The Arduino IDE The Erase Flash Option, It Should Be In Only Sketch. 
 
-
-Este Sketch Se Puede Flashear, Sobre Un Bin Previo Por Ejemplo (#ESP8266XploitHost 2.7) Para Mantener Los Archivos Del Exploit.
-Para Esto En El IDE De Arduino La Opcion Erase Flash, Debe Estar En Only Sketch. 
-
-La Idea De Este Proyecto, Es Permitir A Los Usuarios A Tener Un WebHost Customizable Y Que Puedan Modificar El Funcionamiento Completo Del Mismo.
+The idea of this project is to allow users to have a WebHost Customizable and that can modify the full operation of it.
